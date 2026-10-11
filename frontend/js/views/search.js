@@ -1,4 +1,4 @@
-// Query view (rubric 3.2): tags with counts, thumbnail URL, search by example file. Owner: Member C.
+// Query view (rubric 3.2): tags with counts, thumbnail URL, search by example file. Owner: Member B.
 import { post } from "../api.js";
 import { fileToBase64, h, parseTagCounts, toast } from "../dom.js";
 import { renderGallery } from "../gallery.js";

@@ -83,7 +83,7 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
   <div>
     <div class="eyebrow">FIT3184 2026 S2 · Assignment 2 · 40%</div>
     <h1>Aussie EcoGuard team plan</h1>
-    <p class="lede">Multi-cloud serverless platform that tags invasive pests and pets from uploaded photos and video, with search, a lost-pet finder and a Lex chatbot. Due <b>Monday 2 November 2026, 23:55</b>. No extensions, and no demo means no marks.</p>
+    <p class="lede">Multi-cloud serverless platform that tags invasive pests and pets from uploaded photos and video, with search, a lost-pet finder and a Lex chatbot. Due <b>Monday 2 November 2026, 23:55</b>. No extensions, and no demo means no marks. Work is split by platform: A owns AWS platform and pipeline, B owns GCP and the web UI, C owns AWS application logic.</p>
   </div>
   <div class="meter" aria-live="polite">
     <div class="meter-row">
@@ -138,6 +138,21 @@ flowchart LR
 </section>
 
 <section>
+  <h2>Hand-offs between members</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>From</th><th>To</th><th>What</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td>B, C</td><td>Deployed stack outputs: API URL, user pool ID, client ID</td><td>By 14 Oct</td></tr>
+      <tr><td>B</td><td>A</td><td>Cloud Run URL and a working /detect endpoint</td><td>End of week 1</td></tr>
+      <tr><td>A</td><td>B</td><td>Shared API key and Cognito IDs for the Cloud Run token check</td><td>Week 2</td></tr>
+      <tr><td>C</td><td>B</td><td>Stable search, manage and chat routes, or agreed mock responses</td><td>Week 2</td></tr>
+      <tr><td>A + C</td><td>each other</td><td>Changes to the shared layer or DynamoDB fields: both review</td><td>Any time</td></tr>
+    </tbody>
+  </table></div>
+  <p class="lede" style="margin-top:8px">Every PR is reviewed by someone from a different platform. In week 2 each member deploys another member's component once, so anyone can cover for a teammate.</p>
+</section>
+
+<section>
   <h2>Risks and rules</h2>
   <div class="two">
     <div class="card">
@@ -146,6 +161,7 @@ flowchart LR
       <div class="risk"><b>ML cold starts and size</b>Use a small YOLO model on Cloud Run with at least 1 warm instance during the demo.</div>
       <div class="risk"><b>Hardcoded secrets</b>Keys in client code score 0 on rubric 1.3.</div>
       <div class="risk"><b>Dedup</b>Must use a content checksum, not file name or size.</div>
+      <div class="risk"><b>Academy accounts are per person</b>A owns the shared integration stack. C develops on a personal stack with seed data.</div>
       <div class="risk"><b>Cost</b>Each of you is responsible for charges until Week 15. Delete resources afterwards.</div>
     </div>
     <div class="card">
@@ -179,51 +195,59 @@ flowchart LR
     {id:'t01',p:'p0',o:'',  r:'4.1.1',t:'Choose AWS primary + GCP secondary and write down why each service sits where it does'},
     {id:'t02',p:'p0',o:'',  r:'—',    t:'Freeze the DynamoDB record schema and every API request/response JSON in /docs'},
     {id:'t03',p:'p0',o:'',  r:'4.2.1',t:'Create the private Git repo, share it with the teaching team, everyone makes a first commit'},
-    {id:'t04',p:'p0',o:'',  r:'1.3',  t:'Set up AWS and GCP accounts and credits; test IAM, Cognito and Lex limits in Academy'},
+    {id:'t04',p:'p0',o:'A', r:'1.3',  t:'Set up AWS (Academy or personal) and check what IAM, Cognito and Lex allow'},
+    {id:'t05',p:'p0',o:'B', r:'—',    t:'Set up the GCP project, billing or credits, and add teammates as members'},
 
     {id:'t10',p:'p1',o:'A', r:'1.1',  t:'Cognito user pool: email, first name, last name, password, email verification, temporary password change'},
-    {id:'t11',p:'p1',o:'A', r:'1.2',  t:'Sign-up and login pages with redirect for unauthenticated users; sign-out'},
+    {id:'t11',p:'p1',o:'A', r:'—',    t:'Deploy a bare stack (Cognito, API Gateway, S3, DynamoDB) and share the outputs by 14 Oct'},
     {id:'t12',p:'p1',o:'A', r:'1.2',  t:'API Gateway Cognito authorizer on every endpoint'},
-    {id:'t13',p:'p1',o:'B', r:'2.1.1',t:'Upload to S3 with checksum deduplication (hash checked server-side)'},
-    {id:'t14',p:'p1',o:'B', r:'2.1.2',t:'Thumbnail Lambda: resize keeping aspect ratio and compress'},
-    {id:'t15',p:'p1',o:'B', r:'2.1.3',t:'GCP inference endpoint returns species tags and counts for one image'},
-    {id:'t16',p:'p1',o:'C', r:'2.2.1',t:'DynamoDB table and tag-with-minimum-count query using AND logic, tested on seed data'},
-    {id:'t17',p:'p1',o:'C', r:'2.2.2',t:'Thumbnail URL to full-size URL lookup'},
-    {id:'t18',p:'p1',o:'C', r:'2.2.5',t:'Design Lex intents and slots (find species, find lost pet, date filter)'},
+    {id:'t13',p:'p1',o:'A', r:'2.1.1',t:'Upload to S3 with checksum deduplication (hash re-checked server-side)'},
+    {id:'t14',p:'p1',o:'A', r:'2.1.2',t:'Thumbnail Lambda: resize keeping aspect ratio and compress'},
+    {id:'t15',p:'p1',o:'B', r:'2.1.3',t:'Cloud Run inference endpoint returns species tags and counts for one image'},
+    {id:'t16',p:'p1',o:'B', r:'2.1.3',t:'Accuracy check on about 10 real photos per target species; pick a fallback model if needed'},
+    {id:'t17',p:'p1',o:'B', r:'1.2',  t:'Sign-up and login pages (hosted UI) with redirect for unauthenticated users; sign-out'},
+    {id:'t18',p:'p1',o:'C', r:'2.2.1',t:'Tag-with-minimum-count query using AND logic, tested on seed data'},
+    {id:'t19',p:'p1',o:'C', r:'2.2.2',t:'Thumbnail URL to full-size URL lookup'},
+    {id:'t1a',p:'p1',o:'C', r:'2.2.5',t:'Design Lex intents and slots (find species, find lost pet, date filter)'},
+    {id:'t1b',p:'p1',o:'C', r:'—',    t:'Deploy a personal dev stack and load scripts/seed_dummy_data.py'},
 
     {id:'t20',p:'p2',o:'B', r:'2.1.2',t:'Video frame extraction at 1 frame per 10 seconds, fed to the same detector'},
     {id:'t21',p:'p2',o:'B', r:'2.1.3',t:'Model location read from config or env var so a new model needs no code change'},
-    {id:'t22',p:'p2',o:'B', r:'2.1.3',t:'Ingest Lambda writes full record: tags, file type, file URL, thumbnail URL'},
-    {id:'t23',p:'p2',o:'B', r:'2.3.3',t:'SNS email alerts filtered by subscribed species tag'},
+    {id:'t22',p:'p2',o:'A', r:'2.1.3',t:'Ingest Lambda calls GCP and writes the full record: tags, file type, file URL, thumbnail URL'},
+    {id:'t23',p:'p2',o:'A', r:'2.3.3',t:'SNS email alerts filtered by subscribed species tag'},
     {id:'t24',p:'p2',o:'C', r:'2.2.3',t:'Search by uploaded file: detect tags on the fly, do not store or index the query file'},
     {id:'t25',p:'p2',o:'C', r:'2.2.4',t:'Lost pet search by image or by tags (breed, colour) against recent sightings'},
     {id:'t26',p:'p2',o:'C', r:'2.3.1',t:'Bulk tag add (operation 1) and remove (operation 0); ignore tags that are not present'},
     {id:'t27',p:'p2',o:'C', r:'2.3.2',t:'Delete files, thumbnails and DB records together, in bulk'},
     {id:'t28',p:'p2',o:'C', r:'2.2.5',t:'Lex bot calls the query Lambdas and returns formatted media links'},
     {id:'t29',p:'p2',o:'A', r:'1.3',  t:'Least-privilege IAM roles and policies, no wildcards; document each role'},
-    {id:'t2a',p:'p2',o:'A', r:'1.3',  t:'Forward the Cognito JWT to GCP and verify it there (no hardcoded keys)'},
-    {id:'t2b',p:'p2',o:'A', r:'3.1',  t:'Upload UI with success message and duplicate feedback'},
+    {id:'t2a',p:'p2',o:'A', r:'1.3',  t:'Forward the Cognito token and shared key from Lambda to Cloud Run (no hardcoded secrets)'},
+    {id:'t2b',p:'p2',o:'B', r:'1.3',  t:'Verify the Cognito token and shared key in Cloud Run'},
+    {id:'t2c',p:'p2',o:'B', r:'3.1',  t:'Upload UI with success message and duplicate feedback'},
+    {id:'t2d',p:'p2',o:'B', r:'3.2',  t:'Query, upload-search and lost pet UI with thumbnail gallery, built on seed data'},
+    {id:'t2e',p:'p2',o:'',  r:'—',    t:'Cross-training: each member deploys another member\'s component once from the README'},
 
-    {id:'t30',p:'p3',o:'C', r:'3.2',  t:'Query UI: tag and count form, upload search, lost pet search, thumbnail gallery that opens full size'},
-    {id:'t31',p:'p3',o:'C', r:'3.3',  t:'Embedded Lex chatbot widget with clickable results'},
+    {id:'t30',p:'p3',o:'B', r:'3.2',  t:'Switch the query and lost pet UI from seed data to the live API; full-size view on click'},
+    {id:'t31',p:'p3',o:'B', r:'3.3',  t:'Embedded Lex chatbot widget with clickable results'},
     {id:'t32',p:'p3',o:'B', r:'3.4',  t:'Tag management UI: bulk add, bulk remove and delete with multi-select'},
     {id:'t33',p:'p3',o:'',  r:'—',    t:'Feature freeze (28 Oct). Only bug fixes after this'},
     {id:'t34',p:'p3',o:'',  r:'4.1.2',t:'Full demo rehearsal on the deployed system, run by someone who did not build that part'},
     {id:'t35',p:'p3',o:'A', r:'4.2.1',t:'Team report: architecture diagram with official cloud icons'},
     {id:'t36',p:'p3',o:'B', r:'4.2.1',t:'Team report: service choices, multi-cloud trade-offs, contribution table'},
     {id:'t37',p:'p3',o:'C', r:'4.2.1',t:'Team report: user guide and testing steps, repo link'},
-    {id:'t38',p:'p3',o:'',  r:'4.1.1',t:'Prepare the 3-minute architecture talk so every member speaks'},
+    {id:'t38',p:'p3',o:'',  r:'4.1.1',t:'Prepare the 3-minute architecture talk; each member explains a component they did not write'},
     {id:'t39',p:'p3',o:'',  r:'4.2.2',t:'Each member writes their own individual report (500 words), without consulting the others'},
-    {id:'t3a',p:'p3',o:'',  r:'—',    t:'Submit team report (one person) and individual reports (everyone) on Moodle by 1 Nov'},
-    {id:'t3b',p:'p3',o:'',  r:'—',    t:'After assessment: shut down and delete cloud resources to stop charges'}
+    {id:'t3a',p:'p3',o:'B', r:'—',    t:'Keep one Cloud Run instance warm for the demo; scale back to zero afterwards'},
+    {id:'t3b',p:'p3',o:'',  r:'—',    t:'Submit team report (one person) and individual reports (everyone) on Moodle by 1 Nov'},
+    {id:'t3c',p:'p3',o:'',  r:'—',    t:'After assessment: shut down and delete cloud resources to stop charges'}
   ];
   var RUBRIC = [
-    ['1.1','Sign-up, sign-in, sign-out via Cognito',4,'A'],
-    ['1.2','Access control and redirection',3,'A'],
-    ['1.3','Least-privilege IAM and cross-cloud auth',3,'A'],
-    ['2.1.1','Upload and checksum dedup',5,'B'],
-    ['2.1.2','Thumbnails and video frames',5,'B'],
-    ['2.1.3','ML tagging, extensibility, DB insert',6,'B'],
+    ['1.1','Sign-up, sign-in, sign-out via Cognito',4,'A+B'],
+    ['1.2','Access control and redirection',3,'A+B'],
+    ['1.3','Least-privilege IAM and cross-cloud auth',3,'A+B'],
+    ['2.1.1','Upload and checksum dedup',5,'A'],
+    ['2.1.2','Thumbnails (A) and video frames (B)',5,'A+B'],
+    ['2.1.3','ML tagging (B), DB insert and ingest (A)',6,'A+B'],
     ['2.2.1','Find by tags and counts',5,'C'],
     ['2.2.2','Find by thumbnail URL',3,'C'],
     ['2.2.3','Find by uploaded file',5,'C'],
@@ -231,10 +255,10 @@ flowchart LR
     ['2.2.5','Lex chatbot',6,'C'],
     ['2.3.1','Bulk tag editing',3,'C'],
     ['2.3.2','File and record deletion',3,'C'],
-    ['2.3.3','Tag-based notifications',4,'B'],
-    ['3.1','Auth and upload UI',5,'A'],
-    ['3.2','Query and lost pet UI',5,'C'],
-    ['3.3','Chatbot UI',5,'C'],
+    ['2.3.3','Tag-based notifications',4,'A'],
+    ['3.1','Auth and upload UI',5,'B'],
+    ['3.2','Query and lost pet UI',5,'B'],
+    ['3.3','Chatbot UI',5,'B'],
     ['3.4','Tag management and overall usability',5,'B'],
     ['4.1.1','Architecture presentation',5,'All'],
     ['4.1.2','Demo and Q&A',10,'All'],
@@ -242,9 +266,9 @@ flowchart LR
     ['4.2.2','Individual report',2,'All']
   ];
   var ROLES = {
-    A:{title:'Identity, security and upload UI',items:['Cognito, route guards, API authorizer','IAM roles and cross-cloud token passing','Auth and upload screens, architecture diagram']},
-    B:{title:'Ingest pipeline and ML',items:['Upload, dedup, thumbnails, video frames','GCP inference, model config, DB insert','SNS notifications, tag management UI']},
-    C:{title:'Queries, chatbot and data ops',items:['Tag, thumbnail, file and lost pet search','Lex bot, bulk tags, delete','Query UI, chatbot widget, user guide']}
+    A:{title:'AWS platform and pipeline',items:['Cognito, API Gateway authorizer, IAM roles','Upload, dedup, thumbnails, ingest, SNS alerts','Cross-cloud call to GCP, architecture diagram']},
+    B:{title:'GCP, ML and web UI',items:['Cloud Run inference, model config, video frames','Token and key check on the GCP side','All web UI views and the chatbot widget']},
+    C:{title:'AWS application logic',items:['Tag, file, thumbnail and lost pet search','Bulk tag editing and deletion','Lex bot, fulfilment and chat endpoint']}
   };
   var COLORS = {A:'var(--a)',B:'var(--b)',C:'var(--c)'};
 
@@ -264,7 +288,7 @@ flowchart LR
   }
   function ownerOf(t){
     var s=state.tasks[t.id];
-    return (s && typeof s.owner==='string') ? s.owner : t.o;
+    return (s && typeof s.ownerOverride==='string') ? s.ownerOverride : t.o;
   }
   function isDone(t){ var s=state.tasks[t.id]; return !!(s && s.done); }
   function ownerLabel(k){ return k==='' ? 'Everyone' : (state.names[k] || 'Member '+k); }
@@ -272,8 +296,10 @@ flowchart LR
   function save(t, patch){
     if(!state.db || !state.canWrite) return;
     var cur = state.tasks[t.id] || {};
-    var next = {done: isDone(t), owner: ownerOf(t)};
-    Object.keys(patch).forEach(function(k){ next[k]=patch[k]; });
+    var next = {done: isDone(t)};
+    if (typeof cur.ownerOverride==='string') next.ownerOverride = cur.ownerOverride;
+    if (patch.hasOwnProperty('done')) next.done = patch.done;
+    if (patch.hasOwnProperty('owner')) next.ownerOverride = patch.owner;
     state.tasks[t.id] = next;
     renderAll();
     state.db.doc('tasks/'+t.id).set(next).catch(function(){});
@@ -374,7 +400,7 @@ flowchart LR
   function renderRubric(){
     var host=$('rubric'); host.textContent='';
     RUBRIC.forEach(function(r){
-      var who = r[3]==='All' ? 'Everyone' : ownerLabel(r[3]);
+      var who = r[3]==='All' ? 'Everyone' : r[3].split('+').map(ownerLabel).join(' + ');
       host.appendChild(el('tr',null,[
         el('td',{class:'n',text:r[0]}), el('td',{text:r[1]}), el('td',{class:'n',text:String(r[2])}), el('td',{text:who})
       ]));

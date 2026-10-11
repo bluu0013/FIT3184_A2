@@ -1,4 +1,4 @@
-"""POST /notifications/subscribe: email alerts filtered by species tag. Owner: Member B."""
+"""POST /notifications/subscribe: email alerts filtered by species tag. Owner: Member A."""
 import re
 
 from ecoguard_common import notify, responses, tags as taglib

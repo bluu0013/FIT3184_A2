@@ -1,4 +1,4 @@
-// Upload view (rubric 3.1). Owner: Member A.
+// Upload view (rubric 3.1). Owner: Member B.
 import { post } from "../api.js";
 import { h, sha256Hex, toast } from "../dom.js";
 

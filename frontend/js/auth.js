@@ -1,4 +1,4 @@
-// Cognito hosted UI sign-in with the authorization-code + PKCE flow. Owner: Member A.
+// Cognito hosted UI sign-in with the authorization-code + PKCE flow. Owner: Member B. Cognito pool and client are Member A's.
 // The UI guard here is for usability only; every API route is also protected by the JWT authorizer.
 import { config } from "./config.js";
 

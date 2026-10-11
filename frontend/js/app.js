@@ -1,4 +1,4 @@
-// App shell: sign-in gate and tab navigation. Owner: Member A.
+// App shell: sign-in gate and tab navigation. Owner: Member B.
 import * as auth from "./auth.js";
 import { config } from "./config.js";
 import { toast } from "./dom.js";

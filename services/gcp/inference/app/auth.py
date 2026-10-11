@@ -1,4 +1,5 @@
-"""Request authentication. Owner: Member A.
+"""Request authentication. Owner: Member B (agree the token contract with Member A, who owns the
+Lambda side that forwards the token and the shared key).
 
 Two ways in:
   1. Authorization: Bearer <Cognito ID or access token>, verified against the user pool's JWKS.

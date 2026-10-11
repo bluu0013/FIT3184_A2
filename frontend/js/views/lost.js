@@ -1,4 +1,4 @@
-// Lost pet search (rubric 3.2). Owner: Member C.
+// Lost pet search (rubric 3.2). Owner: Member B.
 import { post } from "../api.js";
 import { fileToBase64, h, toast } from "../dom.js";
 import { renderGallery } from "../gallery.js";

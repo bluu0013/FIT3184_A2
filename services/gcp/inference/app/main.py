@@ -1,4 +1,4 @@
-"""Aussie EcoGuard inference service (Cloud Run). Owner: Member B (auth: Member A)."""
+"""Aussie EcoGuard inference service (Cloud Run). Owner: Member B."""
 import os
 from typing import Literal, Optional
 

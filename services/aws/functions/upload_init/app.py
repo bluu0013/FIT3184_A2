@@ -1,4 +1,4 @@
-"""POST /upload/init: checksum dedup and presigned upload URL. Owner: Member B."""
+"""POST /upload/init: checksum dedup and presigned upload URL. Owner: Member A."""
 import os
 
 from ecoguard_common import db, responses, storage, urls

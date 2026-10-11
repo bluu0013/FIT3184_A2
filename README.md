@@ -55,14 +55,29 @@ tests/                         unit tests for the pure logic
 
 ## Who owns what (change names as you agree)
 
-| Area | Owner | Folders |
-|---|---|---|
-| Identity, IAM, upload UI | Member A | `template.yaml` (Cognito, API, IAM), `frontend/js/auth.js`, `frontend/js/views/upload.js`, `services/gcp/inference/app/auth.py` |
-| Ingest and ML pipeline | Member B | `services/aws/functions/{upload_init,thumbnail,ingest,subscriptions}`, `services/gcp/inference`, `frontend/js/views/tags.js` |
-| Queries, chatbot, data ops | Member C | `services/aws/functions/{search,manage,chat,lex_fulfilment}`, `docs/lex-bot.md`, `frontend/js/views/{search,lost,chat}.js` |
+The team splits by platform so each person works in one cloud toolchain.
+
+| Member | Platform | Owns | Folders |
+|---|---|---|---|
+| A | AWS platform and pipeline | Cognito, API Gateway, IAM, S3, EventBridge, DynamoDB, SNS, upload, dedup, thumbnails, ingest, the call to GCP | `template.yaml`, `services/aws/functions/{upload_init,thumbnail,ingest,subscriptions}` |
+| B | GCP and web UI | Inference service, model config, video frames, token check, and the whole web UI | `services/gcp/inference`, `frontend/` |
+| C | AWS application logic | Tag, thumbnail, file and lost-pet search, bulk tag edit, delete, Lex bot and fulfilment | `services/aws/functions/{search,manage,chat,lex_fulfilment}`, `docs/lex-bot.md` |
 
 Shared and agreed together: `docs/api-contract.md`, `docs/data-model.md`, `services/aws/layers/common`.
 Change a contract in a PR that all three review.
+
+**Hand-offs between members**
+
+| From | To | What |
+|---|---|---|
+| A | B, C | Deployed stack and outputs (API URL, pool and client IDs). Target: within 3 days |
+| A | B | `INFERENCE_API_KEY` and the Cognito pool/client IDs for the Cloud Run auth |
+| B | A | Cloud Run URL and a working `/detect` |
+| C | B | Stable search, manage and chat routes (or agreed mock responses) |
+| A, C | each other | `ecoguard_common` and DynamoDB fields. Both review any change |
+
+**AWS Academy note:** Learner Lab accounts are per person. A owns the shared integration stack. C
+deploys a personal stack for development and uses `scripts/seed_dummy_data.py`.
 
 ## Setup
 

@@ -70,3 +70,17 @@ any previously issued URL for lookups because it only uses the path.
 
 Tag logic, URL parsing and DynamoDB/S3 helpers live in `ecoguard_common` so the search Lambda and the
 Lex fulfilment Lambda behave identically, and the pure parts are unit-tested without AWS.
+
+## 10. Work split by platform
+
+| Member | Platform | Share of marks (approx.) |
+|---|---|---|
+| A | AWS platform and pipeline | 27 |
+| B | GCP, ML and web UI | 28 to 31 |
+| C | AWS application logic | 30 |
+
+Considered and rejected: a split by feature, where C carried about 40 marks (all queries, Lex,
+tags, delete and two UIs) and A about 15. Platform ownership gives balanced work and one toolchain
+per person. The cost is a higher bus factor and B's dependence on A and C, so we mitigate with a
+deployed stack by day 3, mock data and seed script for the UI, week 2 cross-training, and
+cross-platform PR reviews (see CONTRIBUTING.md).

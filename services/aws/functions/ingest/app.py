@@ -1,4 +1,4 @@
-"""EventBridge (S3 Object Created, media/ prefix): verify, tag and index a file. Owner: Member B."""
+"""EventBridge (S3 Object Created, media/ prefix): verify, tag and index a file. Owner: Member A. The GCP endpoint it calls is Member B's."""
 from ecoguard_common import db, inference, notify, storage, urls
 
 

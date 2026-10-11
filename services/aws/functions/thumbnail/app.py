@@ -1,4 +1,4 @@
-"""EventBridge (S3 Object Created, media/ prefix): make a compressed thumbnail. Owner: Member B.
+"""EventBridge (S3 Object Created, media/ prefix): make a compressed thumbnail. Owner: Member A.
 
 Uses Pillow. Switch to OpenCV (cv2.resize with INTER_AREA + cv2.imencode quality) if the team
 prefers; the spec only requires resize with aspect ratio kept plus compression.

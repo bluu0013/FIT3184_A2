@@ -1,4 +1,4 @@
-// Lex chatbot widget (rubric 3.3). Owner: Member C.
+// Lex chatbot widget (rubric 3.3). Owner: Member B. Backend (/chat, Lex bot) is Member C.
 import { post } from "../api.js";
 import { h } from "../dom.js";
 

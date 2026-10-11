@@ -4,6 +4,11 @@
   changes to a teammate to commit.
 - **Branches:** `feature/<short-name>` off `main`. Open a pull request, get one review from a teammate, merge.
 - **Small PRs** (under about 300 changed lines) so reviews happen the same day.
+- **Cross-platform review.** Each PR is reviewed by someone from a different platform: AWS changes
+  (A or C) get a review from B, GCP and UI changes (B) get a review from A or C, and A and C review
+  each other's shared-layer changes. Everyone ends up seeing the whole system for the demo Q&A.
+- **Cross-training in week 2.** Each person deploys another member's component once from the README.
+  Anyone should be able to run any cloud, because the team must cover for a missing member.
 - **Commit messages:** imperative and specific, e.g. `Add checksum check to upload_init`.
 - **Contracts first.** If an API shape or the DynamoDB record changes, update `docs/api-contract.md`
   or `docs/data-model.md` in the same PR and tag both teammates.
