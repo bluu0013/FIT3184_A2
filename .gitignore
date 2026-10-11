@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# AWS SAM
+.aws-sam/
+samconfig.toml
+
+# Secrets and local config
+.env
+*.pem
+*.key
+frontend/js/config.local.js
+
+# ML weights are fetched at runtime (see services/gcp/inference)
+*.pt
+*.onnx
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

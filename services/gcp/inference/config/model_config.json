@@ -1,0 +1,8 @@
+{
+  "model_version": "yolo-world-v2-s-1",
+  "type": "yolo_world",
+  "weights": "yolov8s-worldv2.pt",
+  "classes": ["fox", "feral pig", "cane toad", "rabbit", "cat", "dog", "deer", "goat"],
+  "label_map": {},
+  "confidence": 0.35
+}

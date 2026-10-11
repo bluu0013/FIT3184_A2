@@ -1,0 +1,412 @@
+<title>EcoGuard Team Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column, sticky progress header, phases as ruled lists, side facts in a grid. */
+:root{
+  --bg:#F2F5F3; --surface:#FFFFFF; --ink:#16241F; --muted:#5A6B64; --line:#D3DCD7;
+  --accent:#0E6B66; --accent-ink:#FFFFFF; --warn:#A8620A; --warn-bg:#FBF1DF; --ok:#2F7D3B;
+  --a:#0E6B66; --b:#35569B; --c:#8A4A86;
+  --display:'Archivo','Segoe UI',system-ui,sans-serif;
+  --body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1815; --surface:#17231F; --ink:#E4EDE9; --muted:#93A59D; --line:#2B3B35;
+  --accent:#4FC3BA; --accent-ink:#06221F; --warn:#E8B160; --warn-bg:#2A2214; --ok:#6CC77A;
+  --a:#4FC3BA; --b:#8FAEF0; --c:#D59BD1; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1815; --surface:#17231F; --ink:#E4EDE9; --muted:#93A59D; --line:#2B3B35;
+  --accent:#4FC3BA; --accent-ink:#06221F; --warn:#E8B160; --warn-bg:#2A2214; --ok:#6CC77A;
+  --a:#4FC3BA; --b:#8FAEF0; --c:#D59BD1; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);padding-inline:16px}
+.wrap{max-width:960px;margin-inline:auto;padding-block:24px 64px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.8rem,5vw,2.6rem);letter-spacing:-.01em}
+h2{font-size:1.35rem;margin-bottom:12px}
+h3{font-size:1.02rem}
+p{margin:0}
+.eyebrow{font:500 .75rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+section{margin-top:40px}
+.lede{color:var(--muted);max-width:65ch;margin-top:8px}
+header.top{display:grid;gap:16px}
+.meter{display:grid;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.meter-row{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;justify-content:space-between}
+.big{font:700 1.5rem/1 var(--display);font-variant-numeric:tabular-nums}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.mini{height:6px}
+.days{font:500 .85rem var(--mono);color:var(--muted)}
+.notice{background:var(--warn-bg);color:var(--ink);border:1px solid var(--warn);border-radius:6px;padding:10px 14px;font-size:.9rem}
+.team{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.member{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--mc);border-radius:6px;padding:14px;display:grid;gap:10px;align-content:start;min-width:0}
+.member label{font:500 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.member input{width:100%;font:600 1rem var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+.member ul{margin:0;padding-left:18px;color:var(--muted);font-size:.9rem}
+.member .count{font:500 .8rem var(--mono);color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{font:500 .85rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:6px;margin-bottom:16px;overflow:hidden}
+.phase-h{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.phase-h .when{font:500 .8rem var(--mono);color:var(--muted)}
+.phase-goal{padding:8px 16px;font-size:.9rem;color:var(--muted);border-bottom:1px solid var(--line)}
+.task{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:start;padding:10px 16px;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0}
+.task input[type=checkbox]{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent)}
+.task .t{min-width:0}
+.task .t b{font-weight:500}
+.task.done .t b{text-decoration:line-through;color:var(--muted)}
+.task .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{font:500 .72rem var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:1px 6px}
+.task select{font:500 .85rem var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--oc,var(--line));border-radius:4px;padding:4px 6px;max-width:130px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.card ul{margin:8px 0 0;padding-left:18px}
+.card li{margin-bottom:6px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.92rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.n{font-variant-numeric:tabular-nums;font-family:var(--mono)}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;overflow-x:auto;margin:0}
+.risk{border-left:4px solid var(--warn);padding:2px 0 2px 12px;margin-bottom:12px}
+.risk b{display:block}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){.task{grid-template-columns:auto 1fr}.task select{grid-column:2;justify-self:start}}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div>
+    <div class="eyebrow">FIT3184 2026 S2 · Assignment 2 · 40%</div>
+    <h1>Aussie EcoGuard team plan</h1>
+    <p class="lede">Multi-cloud serverless platform that tags invasive pests and pets from uploaded photos and video, with search, a lost-pet finder and a Lex chatbot. Due <b>Monday 2 November 2026, 23:55</b>. No extensions, and no demo means no marks.</p>
+  </div>
+  <div class="meter" aria-live="polite">
+    <div class="meter-row">
+      <span><span class="big" id="pct">0%</span> <span class="days" id="count">0 of 0 tasks</span></span>
+      <span class="days" id="days"></span>
+    </div>
+    <div class="bar"><i id="fill"></i></div>
+  </div>
+  <div class="notice" id="ro" hidden>You can view this plan but not tick tasks. Ask the owner to share it with you as a Contributor or Editor.</div>
+  <div class="notice" id="nodb" hidden>Shared progress is not available in this view, so ticks are not saved. Open the link while signed in to claude.ai.</div>
+</header>
+
+<section id="team-s">
+  <h2>Who does what</h2>
+  <div class="team" id="team"></div>
+</section>
+
+<section>
+  <h2>Task board</h2>
+  <div class="filters" role="group" aria-label="Filter by owner" id="filters"></div>
+  <div id="phases"></div>
+</section>
+
+<section>
+  <h2>Proposed architecture</h2>
+  <p class="lede" style="margin-bottom:12px">AWS handles identity, API, storage, data and chat. GCP runs the ML inference. The cross-cloud link carries the Cognito token, which the GCP function verifies. This is a starting point to agree on in week 0, not a final design.</p>
+  <pre class="mermaid">
+flowchart LR
+  U[Browser UI] -->|sign in| COG[AWS Cognito]
+  U -->|JWT| APIGW[AWS API Gateway]
+  APIGW --> LQ[Lambda: query, tags, delete]
+  U -->|upload| S3[(AWS S3 media)]
+  S3 -->|event| LT[Lambda: thumbnail + dedup]
+  S3 -->|event| LI[Lambda: ingest]
+  LI -->|JWT forwarded| GCP[GCP Cloud Run: YOLO / MegaDetector]
+  GCP --> GCS[(GCS model weights)]
+  LI --> DDB[(AWS DynamoDB)]
+  LQ --> DDB
+  LI --> SNS[AWS SNS email alerts]
+  LEX[AWS Lex chatbot] --> LQ
+  U --> LEX
+  </pre>
+</section>
+
+<section>
+  <h2>Where the marks are</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Ref</th><th>Criterion</th><th>Marks</th><th>Owner</th></tr></thead>
+    <tbody id="rubric"></tbody>
+  </table></div>
+  <p class="lede" style="margin-top:8px">Each item scores 100%, 50% or 0%. Partial work gets half, so finish one feature fully before starting the next.</p>
+</section>
+
+<section>
+  <h2>Risks and rules</h2>
+  <div class="two">
+    <div class="card">
+      <h3>Watch for</h3>
+      <div class="risk" style="margin-top:12px"><b>AWS Academy limits</b>IAM role creation, Cognito and Lex can be restricted. Test in week 0. Fallback is a personal free-tier account.</div>
+      <div class="risk"><b>ML cold starts and size</b>Use a small YOLO model on Cloud Run with at least 1 warm instance during the demo.</div>
+      <div class="risk"><b>Hardcoded secrets</b>Keys in client code score 0 on rubric 1.3.</div>
+      <div class="risk"><b>Dedup</b>Must use a content checksum, not file name or size.</div>
+      <div class="risk"><b>Cost</b>Each of you is responsible for charges until Week 15. Delete resources afterwards.</div>
+    </div>
+    <div class="card">
+      <h3>Rules from the spec</h3>
+      <ul>
+        <li>At least two cloud providers, with cross-cloud calls shown and justified in the demo.</li>
+        <li>Cognito for auth. Everything except sign-up is blocked when signed out.</li>
+        <li>Video: 1 frame per 10 seconds.</li>
+        <li>File-based search must not store or index the query file.</li>
+        <li>Everyone commits to the private repo, shared with the teaching team.</li>
+        <li>All members attend the Zoom demo: 3 min architecture, up to 15 min demo, then Q&amp;A.</li>
+        <li>Peer assessment can cut up to 50% from a member's mark.</li>
+        <li>AI use is allowed but must be acknowledged, and you must be able to explain your code.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+  var DUE = new Date(2026,10,2,23,55,0);
+  var PHASES = [
+    {id:'p0', name:'Week 0: Decide together', when:'11 – 13 Oct', goal:'Everyone agrees on the same design and contracts before building.'},
+    {id:'p1', name:'Week 1: Foundations', when:'14 – 20 Oct', goal:'Checkpoint: sign in, upload an image, see a row in the database.'},
+    {id:'p2', name:'Week 2: Core features', when:'21 – 27 Oct', goal:'Checkpoint: every API works end to end in Postman.'},
+    {id:'p3', name:'Week 3: UI, polish and hand-in', when:'28 Oct – 2 Nov', goal:'Feature freeze 28 Oct. Rehearse the demo, write the reports, submit early.'}
+  ];
+  // owner: 'A' | 'B' | 'C' | '' (everyone)
+  var TASKS = [
+    {id:'t01',p:'p0',o:'',  r:'4.1.1',t:'Choose AWS primary + GCP secondary and write down why each service sits where it does'},
+    {id:'t02',p:'p0',o:'',  r:'—',    t:'Freeze the DynamoDB record schema and every API request/response JSON in /docs'},
+    {id:'t03',p:'p0',o:'',  r:'4.2.1',t:'Create the private Git repo, share it with the teaching team, everyone makes a first commit'},
+    {id:'t04',p:'p0',o:'',  r:'1.3',  t:'Set up AWS and GCP accounts and credits; test IAM, Cognito and Lex limits in Academy'},
+
+    {id:'t10',p:'p1',o:'A', r:'1.1',  t:'Cognito user pool: email, first name, last name, password, email verification, temporary password change'},
+    {id:'t11',p:'p1',o:'A', r:'1.2',  t:'Sign-up and login pages with redirect for unauthenticated users; sign-out'},
+    {id:'t12',p:'p1',o:'A', r:'1.2',  t:'API Gateway Cognito authorizer on every endpoint'},
+    {id:'t13',p:'p1',o:'B', r:'2.1.1',t:'Upload to S3 with checksum deduplication (hash checked server-side)'},
+    {id:'t14',p:'p1',o:'B', r:'2.1.2',t:'Thumbnail Lambda: resize keeping aspect ratio and compress'},
+    {id:'t15',p:'p1',o:'B', r:'2.1.3',t:'GCP inference endpoint returns species tags and counts for one image'},
+    {id:'t16',p:'p1',o:'C', r:'2.2.1',t:'DynamoDB table and tag-with-minimum-count query using AND logic, tested on seed data'},
+    {id:'t17',p:'p1',o:'C', r:'2.2.2',t:'Thumbnail URL to full-size URL lookup'},
+    {id:'t18',p:'p1',o:'C', r:'2.2.5',t:'Design Lex intents and slots (find species, find lost pet, date filter)'},
+
+    {id:'t20',p:'p2',o:'B', r:'2.1.2',t:'Video frame extraction at 1 frame per 10 seconds, fed to the same detector'},
+    {id:'t21',p:'p2',o:'B', r:'2.1.3',t:'Model location read from config or env var so a new model needs no code change'},
+    {id:'t22',p:'p2',o:'B', r:'2.1.3',t:'Ingest Lambda writes full record: tags, file type, file URL, thumbnail URL'},
+    {id:'t23',p:'p2',o:'B', r:'2.3.3',t:'SNS email alerts filtered by subscribed species tag'},
+    {id:'t24',p:'p2',o:'C', r:'2.2.3',t:'Search by uploaded file: detect tags on the fly, do not store or index the query file'},
+    {id:'t25',p:'p2',o:'C', r:'2.2.4',t:'Lost pet search by image or by tags (breed, colour) against recent sightings'},
+    {id:'t26',p:'p2',o:'C', r:'2.3.1',t:'Bulk tag add (operation 1) and remove (operation 0); ignore tags that are not present'},
+    {id:'t27',p:'p2',o:'C', r:'2.3.2',t:'Delete files, thumbnails and DB records together, in bulk'},
+    {id:'t28',p:'p2',o:'C', r:'2.2.5',t:'Lex bot calls the query Lambdas and returns formatted media links'},
+    {id:'t29',p:'p2',o:'A', r:'1.3',  t:'Least-privilege IAM roles and policies, no wildcards; document each role'},
+    {id:'t2a',p:'p2',o:'A', r:'1.3',  t:'Forward the Cognito JWT to GCP and verify it there (no hardcoded keys)'},
+    {id:'t2b',p:'p2',o:'A', r:'3.1',  t:'Upload UI with success message and duplicate feedback'},
+
+    {id:'t30',p:'p3',o:'C', r:'3.2',  t:'Query UI: tag and count form, upload search, lost pet search, thumbnail gallery that opens full size'},
+    {id:'t31',p:'p3',o:'C', r:'3.3',  t:'Embedded Lex chatbot widget with clickable results'},
+    {id:'t32',p:'p3',o:'B', r:'3.4',  t:'Tag management UI: bulk add, bulk remove and delete with multi-select'},
+    {id:'t33',p:'p3',o:'',  r:'—',    t:'Feature freeze (28 Oct). Only bug fixes after this'},
+    {id:'t34',p:'p3',o:'',  r:'4.1.2',t:'Full demo rehearsal on the deployed system, run by someone who did not build that part'},
+    {id:'t35',p:'p3',o:'A', r:'4.2.1',t:'Team report: architecture diagram with official cloud icons'},
+    {id:'t36',p:'p3',o:'B', r:'4.2.1',t:'Team report: service choices, multi-cloud trade-offs, contribution table'},
+    {id:'t37',p:'p3',o:'C', r:'4.2.1',t:'Team report: user guide and testing steps, repo link'},
+    {id:'t38',p:'p3',o:'',  r:'4.1.1',t:'Prepare the 3-minute architecture talk so every member speaks'},
+    {id:'t39',p:'p3',o:'',  r:'4.2.2',t:'Each member writes their own individual report (500 words), without consulting the others'},
+    {id:'t3a',p:'p3',o:'',  r:'—',    t:'Submit team report (one person) and individual reports (everyone) on Moodle by 1 Nov'},
+    {id:'t3b',p:'p3',o:'',  r:'—',    t:'After assessment: shut down and delete cloud resources to stop charges'}
+  ];
+  var RUBRIC = [
+    ['1.1','Sign-up, sign-in, sign-out via Cognito',4,'A'],
+    ['1.2','Access control and redirection',3,'A'],
+    ['1.3','Least-privilege IAM and cross-cloud auth',3,'A'],
+    ['2.1.1','Upload and checksum dedup',5,'B'],
+    ['2.1.2','Thumbnails and video frames',5,'B'],
+    ['2.1.3','ML tagging, extensibility, DB insert',6,'B'],
+    ['2.2.1','Find by tags and counts',5,'C'],
+    ['2.2.2','Find by thumbnail URL',3,'C'],
+    ['2.2.3','Find by uploaded file',5,'C'],
+    ['2.2.4','Lost pet search',5,'C'],
+    ['2.2.5','Lex chatbot',6,'C'],
+    ['2.3.1','Bulk tag editing',3,'C'],
+    ['2.3.2','File and record deletion',3,'C'],
+    ['2.3.3','Tag-based notifications',4,'B'],
+    ['3.1','Auth and upload UI',5,'A'],
+    ['3.2','Query and lost pet UI',5,'C'],
+    ['3.3','Chatbot UI',5,'C'],
+    ['3.4','Tag management and overall usability',5,'B'],
+    ['4.1.1','Architecture presentation',5,'All'],
+    ['4.1.2','Demo and Q&A',10,'All'],
+    ['4.2.1','Team report',3,'All'],
+    ['4.2.2','Individual report',2,'All']
+  ];
+  var ROLES = {
+    A:{title:'Identity, security and upload UI',items:['Cognito, route guards, API authorizer','IAM roles and cross-cloud token passing','Auth and upload screens, architecture diagram']},
+    B:{title:'Ingest pipeline and ML',items:['Upload, dedup, thumbnails, video frames','GCP inference, model config, DB insert','SNS notifications, tag management UI']},
+    C:{title:'Queries, chatbot and data ops',items:['Tag, thumbnail, file and lost pet search','Lex bot, bulk tags, delete','Query UI, chatbot widget, user guide']}
+  };
+  var COLORS = {A:'var(--a)',B:'var(--b)',C:'var(--c)'};
+
+  var state = {tasks:{}, names:{A:'',B:'',C:''}, filter:'ALL', canWrite:true, db:null};
+
+  function $(id){return document.getElementById(id)}
+  function el(tag, attrs, kids){
+    var n=document.createElement(tag);
+    if(attrs) Object.keys(attrs).forEach(function(k){
+      if(k==='text') n.textContent=attrs[k];
+      else if(k==='class') n.className=attrs[k];
+      else if(k.slice(0,2)==='on') n.addEventListener(k.slice(2),attrs[k]);
+      else n.setAttribute(k,attrs[k]);
+    });
+    (kids||[]).forEach(function(c){ if(c) n.appendChild(c); });
+    return n;
+  }
+  function ownerOf(t){
+    var s=state.tasks[t.id];
+    return (s && typeof s.owner==='string') ? s.owner : t.o;
+  }
+  function isDone(t){ var s=state.tasks[t.id]; return !!(s && s.done); }
+  function ownerLabel(k){ return k==='' ? 'Everyone' : (state.names[k] || 'Member '+k); }
+
+  function save(t, patch){
+    if(!state.db || !state.canWrite) return;
+    var cur = state.tasks[t.id] || {};
+    var next = {done: isDone(t), owner: ownerOf(t)};
+    Object.keys(patch).forEach(function(k){ next[k]=patch[k]; });
+    state.tasks[t.id] = next;
+    renderAll();
+    state.db.doc('tasks/'+t.id).set(next).catch(function(){});
+  }
+  function saveNames(){
+    if(!state.db || !state.canWrite) return;
+    state.db.doc('meta/team').set({A:state.names.A,B:state.names.B,C:state.names.C}).catch(function(){});
+  }
+
+  function renderProgress(){
+    var done=TASKS.filter(isDone).length, total=TASKS.length;
+    var pct=Math.round(done/total*100);
+    $('pct').textContent=pct+'%';
+    $('count').textContent=done+' of '+total+' tasks';
+    $('fill').style.width=pct+'%';
+    var ms=DUE-new Date(), d=Math.ceil(ms/86400000);
+    $('days').textContent = ms>0 ? d+' days to submission' : 'Submission time has passed';
+  }
+
+  function renderTeam(){
+    var host=$('team');
+    // do not rebuild while someone is typing a name
+    if(host.contains(document.activeElement) && document.activeElement.tagName==='INPUT'){ updateCounts(); return; }
+    host.textContent='';
+    ['A','B','C'].forEach(function(k){
+      var mine=TASKS.filter(function(t){return ownerOf(t)===k});
+      var done=mine.filter(isDone).length;
+      var input=el('input',{id:'name-'+k,type:'text',placeholder:'Type name',maxlength:'60',value:state.names[k]||''});
+      input.disabled=!state.canWrite;
+      input.addEventListener('change',function(){ state.names[k]=input.value.trim(); saveNames(); renderAll(); });
+      var card=el('div',{class:'member'},[
+        el('label',{for:'name-'+k,text:'Member '+k}),
+        input,
+        el('h3',{text:ROLES[k].title}),
+        el('ul',null,ROLES[k].items.map(function(i){return el('li',{text:i})})),
+        el('div',{class:'bar mini'},[el('i',{style:'width:'+(mine.length?Math.round(done/mine.length*100):0)+'%'})]),
+        el('div',{class:'count',text:done+' of '+mine.length+' assigned tasks done'})
+      ]);
+      card.style.setProperty('--mc',COLORS[k]);
+      host.appendChild(card);
+    });
+  }
+  function updateCounts(){ /* name field focused: skip rebuild, counts refresh on next render */ }
+
+  function renderFilters(){
+    var host=$('filters'); host.textContent='';
+    [['ALL','All tasks'],['A',ownerLabel('A')],['B',ownerLabel('B')],['C',ownerLabel('C')],['',"Everyone"],['OPEN','Not done']].forEach(function(f){
+      var b=el('button',{class:'chip',type:'button','aria-pressed':String(state.filter===f[0]),text:f[1]});
+      b.addEventListener('click',function(){ state.filter=f[0]; renderAll(); });
+      host.appendChild(b);
+    });
+  }
+
+  function renderPhases(){
+    var host=$('phases'); host.textContent='';
+    PHASES.forEach(function(p){
+      var list=TASKS.filter(function(t){
+        if(t.p!==p.id) return false;
+        if(state.filter==='ALL') return true;
+        if(state.filter==='OPEN') return !isDone(t);
+        return ownerOf(t)===state.filter;
+      });
+      var all=TASKS.filter(function(t){return t.p===p.id});
+      var done=all.filter(isDone).length;
+      var box=el('div',{class:'phase'},[
+        el('div',{class:'phase-h'},[
+          el('h3',{text:p.name}),
+          el('span',{class:'when',text:p.when+' · '+done+'/'+all.length+' done'})
+        ]),
+        el('div',{class:'phase-goal',text:p.goal})
+      ]);
+      if(!list.length) box.appendChild(el('div',{class:'phase-goal',text:'No tasks match this filter.'}));
+      list.forEach(function(t){
+        var cb=el('input',{type:'checkbox',id:'cb-'+t.id,'aria-label':'Done: '+t.t});
+        cb.checked=isDone(t); cb.disabled=!state.canWrite;
+        cb.addEventListener('change',function(){ save(t,{done:cb.checked}); });
+        var sel=el('select',{id:'ow-'+t.id,'aria-label':'Owner'});
+        [['',"Everyone"],['A',ownerLabel('A')],['B',ownerLabel('B')],['C',ownerLabel('C')]].forEach(function(o){
+          var op=el('option',{value:o[0],text:o[1]}); if(o[0]===ownerOf(t)) op.selected=true; sel.appendChild(op);
+        });
+        sel.disabled=!state.canWrite;
+        sel.style.setProperty('--oc',COLORS[ownerOf(t)]||'var(--line)');
+        sel.addEventListener('change',function(){ save(t,{owner:sel.value}); });
+        var row=el('div',{class:'task'+(isDone(t)?' done':'')},[
+          cb,
+          el('div',{class:'t'},[
+            el('b',{text:t.t}),
+            el('div',{class:'meta'},[el('span',{class:'tag',text:t.r==='—'?'general':'rubric '+t.r})])
+          ]),
+          sel
+        ]);
+        box.appendChild(row);
+      });
+      host.appendChild(box);
+    });
+  }
+
+  function renderRubric(){
+    var host=$('rubric'); host.textContent='';
+    RUBRIC.forEach(function(r){
+      var who = r[3]==='All' ? 'Everyone' : ownerLabel(r[3]);
+      host.appendChild(el('tr',null,[
+        el('td',{class:'n',text:r[0]}), el('td',{text:r[1]}), el('td',{class:'n',text:String(r[2])}), el('td',{text:who})
+      ]));
+    });
+  }
+
+  function renderAll(){
+    renderProgress(); renderTeam(); renderFilters(); renderPhases(); renderRubric();
+  }
+
+  renderAll();
+
+  // Shared state
+  (async function(){
+    var db=null, user=null;
+    try{ db = window.claude && await window.claude.use('db'); }catch(e){}
+    try{ user = window.claude && await window.claude.use('user'); }catch(e){}
+    if(!db){ $('nodb').hidden=false; return; }
+    state.db=db;
+    try{
+      var cw = user && user.can ? user.can('data.write') : null;
+      if(cw===false){ state.canWrite=false; $('ro').hidden=false; renderAll(); }
+    }catch(e){}
+    db.collection('tasks').onSnapshot(function(snap){
+      var m={};
+      snap.docs.forEach(function(d){ if(d.exists) m[d.id]=d.data(); });
+      state.tasks=m; renderAll();
+    }, function(){ $('nodb').hidden=false; });
+    db.doc('meta/team').onSnapshot(function(s){
+      if(s.exists){ var d=s.data(); state.names={A:d.A||'',B:d.B||'',C:d.C||''}; renderAll(); }
+    }, function(){});
+  })();
+  setInterval(renderProgress, 60000);
+})();
+</script>

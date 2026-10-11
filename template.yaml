@@ -1,0 +1,362 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Aussie EcoGuard - AWS half (auth, API, storage, metadata, chat, alerts)
+
+# Deploy:  sam build --use-container  &&  sam deploy --guided
+# Not yet deployed by the team: expect small fixes on the first run.
+
+Parameters:
+  LabRoleArn:
+    Type: String
+    Default: ""
+    Description: AWS Academy only. ARN of LabRole. Leave empty on a personal account to get a separate least-privilege role per function.
+  InferenceUrl:
+    Type: String
+    Default: ""
+    Description: Cloud Run URL of the inference service (no trailing slash).
+  InferenceApiKey:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: Shared key for S3-triggered ingest calls to Cloud Run. TODO move to SSM Parameter Store.
+  CognitoDomainPrefix:
+    Type: String
+    Description: Globally unique prefix for the Cognito hosted UI, e.g. ecoguard-team07
+  FrontendOrigin:
+    Type: String
+    Default: http://localhost:5500
+    Description: Origin the web app is served from (used for CORS and Cognito callbacks).
+  LexBotId:
+    Type: String
+    Default: ""
+  LexBotAliasId:
+    Type: String
+    Default: ""
+
+Conditions:
+  UseLabRole: !Not [!Equals [!Ref LabRoleArn, ""]]
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 29
+    MemorySize: 256
+    Layers:
+      - !Ref CommonLayer
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref MediaTable
+        MEDIA_BUCKET: !Ref MediaBucket
+        ALERTS_TOPIC_ARN: !Ref AlertsTopic
+        INFERENCE_URL: !Ref InferenceUrl
+        INFERENCE_API_KEY: !Ref InferenceApiKey
+        LEX_BOT_ID: !Ref LexBotId
+        LEX_BOT_ALIAS_ID: !Ref LexBotAliasId
+
+Resources:
+  # ---------------------------------------------------------------- shared code
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${AWS::StackName}-common"
+      ContentUri: services/aws/layers/common/
+      CompatibleRuntimes: [python3.12]
+    Metadata:
+      BuildMethod: python3.12
+
+  # ---------------------------------------------------------------- data
+  MediaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: [!Ref FrontendOrigin]
+            AllowedMethods: [PUT, GET]
+            AllowedHeaders: ["*"]
+            MaxAge: 600
+
+  MediaTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: file_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: file_id
+          KeyType: HASH
+
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+
+  # ---------------------------------------------------------------- identity
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "${AWS::StackName}-users"
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: given_name
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: family_name
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      CallbackURLs:
+        - !Sub "${FrontendOrigin}/"
+      LogoutURLs:
+        - !Sub "${FrontendOrigin}/"
+      SupportedIdentityProviders: [COGNITO]
+      ExplicitAuthFlows: [ALLOW_REFRESH_TOKEN_AUTH]
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CognitoDomainPrefix
+      UserPoolId: !Ref UserPool
+
+  # ---------------------------------------------------------------- API
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: [!Ref FrontendOrigin]
+        AllowHeaders: [authorization, content-type]
+        AllowMethods: [POST, OPTIONS]
+        MaxAge: 600
+      Auth:
+        DefaultAuthorizer: CognitoJwt
+        Authorizers:
+          CognitoJwt:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+              audience:
+                - !Ref UserPoolClient
+
+  # ---------------------------------------------------------------- functions
+  UploadInitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/upload_init/
+      Handler: app.handler
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref MediaBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MediaTable
+      Events:
+        Init:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /upload/init
+            Method: POST
+
+  ThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/thumbnail/
+      Handler: app.handler
+      MemorySize: 512
+      Timeout: 60
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref MediaBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MediaTable
+      Events:
+        Uploaded:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source: [aws.s3]
+              detail-type: [Object Created]
+              detail:
+                bucket:
+                  name: [!Ref MediaBucket]
+                object:
+                  key:
+                    - prefix: media/
+
+  IngestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/ingest/
+      Handler: app.handler
+      MemorySize: 512
+      Timeout: 600
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref MediaBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MediaTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt AlertsTopic.TopicName
+      Events:
+        Uploaded:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source: [aws.s3]
+              detail-type: [Object Created]
+              detail:
+                bucket:
+                  name: [!Ref MediaBucket]
+                object:
+                  key:
+                    - prefix: media/
+
+  SearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/search/
+      Handler: app.handler
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref MediaBucket
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+      Events:
+        Tags:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /search/tags, Method: POST}
+        Thumbnail:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /search/thumbnail, Method: POST}
+        ByFile:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /search/by-file, Method: POST}
+        LostPet:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /search/lost-pet, Method: POST}
+
+  ManageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/manage/
+      Handler: app.handler
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref MediaBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MediaTable
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt AlertsTopic.TopicName
+      Events:
+        EditTags:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /tags, Method: POST}
+        Delete:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /files/delete, Method: POST}
+
+  SubscriptionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/subscriptions/
+      Handler: app.handler
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: sns:Subscribe
+              Resource: !Ref AlertsTopic
+      Events:
+        Subscribe:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /notifications/subscribe, Method: POST}
+
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/chat/
+      Handler: app.handler
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: lex:RecognizeText
+              Resource: "*"
+      Events:
+        Chat:
+          Type: HttpApi
+          Properties: {ApiId: !Ref Api, Path: /chat, Method: POST}
+
+  LexFulfilmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/aws/functions/lex_fulfilment/
+      Handler: app.handler
+      Role: !If [UseLabRole, !Ref LabRoleArn, !Ref "AWS::NoValue"]
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref MediaBucket
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  LexInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LexFulfilmentFunction
+      Action: lambda:InvokeFunction
+      Principal: lexv2.amazonaws.com
+      SourceAccount: !Ref "AWS::AccountId"
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com"
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  CognitoDomain:
+    Value: !Sub "${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com"
+  MediaBucketName:
+    Value: !Ref MediaBucket
+  TableName:
+    Value: !Ref MediaTable
+  AlertsTopicArn:
+    Value: !Ref AlertsTopic
+  LexFulfilmentFunctionArn:
+    Value: !GetAtt LexFulfilmentFunction.Arn

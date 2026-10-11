@@ -1,0 +1,1 @@
+# boto3 is provided by the Lambda runtime. Keep this file so `sam build` treats the folder as a Python layer.

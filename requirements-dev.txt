@@ -1,0 +1,3 @@
+# Local tooling only (scripts, tests). Lambda and Cloud Run have their own requirements.
+boto3>=1.34
+Pillow>=10.0

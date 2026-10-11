@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aussie EcoGuard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Aussie EcoGuard</h1>
+    <div class="who">
+      <span id="user-name"></span>
+      <button id="signout" type="button" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <section id="landing" class="panel" hidden>
+    <h2>Sign in to continue</h2>
+    <p>Track invasive pests and find lost pets. You need an account to upload or search.</p>
+    <div class="row">
+      <button id="signin" type="button">Sign in</button>
+      <button id="signup" type="button" class="secondary">Create account</button>
+    </div>
+  </section>
+
+  <div id="app" hidden>
+    <nav class="tabs" id="tabs" aria-label="Sections">
+      <button type="button" data-view="upload" aria-selected="true">Upload</button>
+      <button type="button" data-view="search" aria-selected="false">Search</button>
+      <button type="button" data-view="lost" aria-selected="false">Lost pet</button>
+      <button type="button" data-view="tags" aria-selected="false">Tags &amp; delete</button>
+      <button type="button" data-view="chat" aria-selected="false">Chatbot</button>
+    </nav>
+    <main>
+      <section class="panel" id="view-upload"></section>
+      <section class="panel" id="view-search" hidden></section>
+      <section class="panel" id="view-lost" hidden></section>
+      <section class="panel" id="view-tags" hidden></section>
+      <section class="panel" id="view-chat" hidden></section>
+    </main>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
